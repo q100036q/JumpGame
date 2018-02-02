@@ -1,3 +1,13 @@
+// Learn cc.Class:
+//  - [Chinese] http://www.cocos.com/docs/creator/scripting/class.html
+//  - [English] http://www.cocos2d-x.org/docs/editors_and_tools/creator-chapters/scripting/class/index.html
+// Learn Attribute:
+//  - [Chinese] http://www.cocos.com/docs/creator/scripting/reference/attributes.html
+//  - [English] http://www.cocos2d-x.org/docs/editors_and_tools/creator-chapters/scripting/reference/attributes/index.html
+// Learn life-cycle callbacks:
+//  - [Chinese] http://www.cocos.com/docs/creator/scripting/life-cycle-callbacks.html
+//  - [English] http://www.cocos2d-x.org/docs/editors_and_tools/creator-chapters/scripting/life-cycle-callbacks/index.html
+
 cc.Class({
     extends: cc.Component,
 
@@ -6,26 +16,17 @@ cc.Class({
         jumpDuration: 0,
         jumpMaxMoveSpeed: 0,
         accel: 0,
-        squashDuration: 0,
         jumpAudio:{
             default: null,
             url: cc.AudioClip,
         },
     },
     setJumpAction:function()
-    { 
-        // 跳跃上升
-        var jumpUp = cc.moveBy(this.jumpDuration, cc.p(0, this.jumpHeight)).easing(cc.easeCubicActionOut());
-        // 下落
-        var jumpDown = cc.moveBy(this.jumpDuration, cc.p(0, -this.jumpHeight)).easing(cc.easeCubicActionIn());
-        // 形变
-        var squash = cc.scaleTo(this.squashDuration, 1, 0.6);
-        var stretch = cc.scaleTo(this.squashDuration, 1, 1.2);
-        var scaleBack = cc.scaleTo(this.squashDuration, 1, 1);
-        // 添加一个回调函数，用于在动作结束时调用我们定义的其他方法
-        var callback = cc.callFunc(this.playJumpSound, this);
-        // 不断重复，而且每次完成落地动作后调用回调来播放声音
-        return cc.repeatForever(cc.sequence(squash, stretch, jumpUp, scaleBack, jumpDown, callback));
+    {
+        var jumpUp = cc.moveBy(this.jumpDuration,cc.p(0,this.jumpHeight)).easing(cc.easeCubicActionOut());
+        var jumpDown = cc.moveBy(this.jumpDuration,cc.p(0,-this.jumpHeight)).easing(cc.easeCubicActionIn());
+        var callback = cc.callFunc(this.playJumpSound,this);
+        return cc.repeatForever(cc.sequence(jumpUp,jumpDown,callback));
 
     },
     playJumpSound: function(){
@@ -35,9 +36,11 @@ cc.Class({
 
     onLoad: function() {
         this.jumpAction = this.setJumpAction();
+        this.node.runAction(this.jumpAction);
 
         this.accRight = false;
         this.accLeft = false;
+        this.xSpeed = 0;
         this.setInputControl();
     },
 
@@ -48,12 +51,10 @@ cc.Class({
             onKeyPressed: function(keyCode,event){
                 switch(keyCode){
                     case cc.KEY.a:
-                    //case cc.KEY.left:
                     self.accLeft = true;
                     self.accRight = false;
                         break;
                     case cc.KEY.d:
-                    //case cc.KEY.right:
                     self.accLeft = false;
                     self.accRight = true;
                         break;
@@ -62,53 +63,23 @@ cc.Class({
             onKeyReleased: function(keyCode,event){
                 switch(keyCode){
                     case cc.KEY.a:
-                    //case cc.KEY.left:
                     self.accLeft = false;
                         break;
                     case cc.KEY.d:
-                    //case cc.KEY.right:
                     self.accRight = false;
                         break;
                 }
             }
         },self.node);
-
-        cc.eventManager.addListener({
-            event: cc.EventListener.TOUCH_ONE_BY_ONE,
-            onTouchBegan: function(touch, event) {
-                var touchLoc = touch.getLocation();
-                if (touchLoc.x >= cc.winSize.width/2) {
-                    self.accLeft = false;
-                    self.accRight = true;
-                } else {
-                    self.accLeft = true;
-                    self.accRight = false;
-                }
-                // don't capture the event
-                return true;
-            },
-            onTouchEnded: function(touch, event) {
-                self.accLeft = false;
-                self.accRight = false;
-            }
-        }, self.node);
     },
-    getCenterPos: function(){
-        var centerPos = cc.p(this.node.x,this.node.y+this.node.height/2);
-        return centerPos;
+    removeKeyBoardEvent: function(){
+        cc.eventManager.removeAllListeners();
+        //cc.eventManager.removeListeners(cc.EventListener.KEYBOARD);
+    },
+    start () {
+
     },
 
-    startMoveAt: function (pos) {
-        this.xSpeed = 0;
-        this.node.setPosition(pos);
-        this.node.runAction(this.jumpAction);
-    },
-
-    stopMove: function () {
-        cc.eventManager.removeListeners(cc.EventListener.KEYBOARD);
-        this.node.stopAllActions();
-    },
-    
     update: function(dt) {
         if (this.accRight){
             this.xSpeed += this.accel * dt;
@@ -121,12 +92,5 @@ cc.Class({
         }
 
         this.node.x += this.xSpeed * dt;
-        if(this.node.x > this.node.parent.width/2){
-            this.xSpeed = 0;
-            this.node.x = this.node.parent.width/2;
-        }else if(this.node.x < -this.node.parent.width/2){
-            this.xSpeed = 0;
-            this.node.x = -this.node.parent.width/2;
-        }
     },
 });
