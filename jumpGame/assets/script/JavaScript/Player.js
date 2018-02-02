@@ -46,14 +46,15 @@ cc.Class({
         cc.eventManager.addListener({
             event:cc.EventListener.KEYBOARD,
             onKeyPressed: function(keyCode,event){
+                cc.log("112121");
                 switch(keyCode){
                     case cc.KEY.a:
-                    //case cc.KEY.left:
+                    case cc.KEY.left:
                     self.accLeft = true;
                     self.accRight = false;
                         break;
                     case cc.KEY.d:
-                    //case cc.KEY.right:
+                    case cc.KEY.right:
                     self.accLeft = false;
                     self.accRight = true;
                         break;
@@ -62,11 +63,11 @@ cc.Class({
             onKeyReleased: function(keyCode,event){
                 switch(keyCode){
                     case cc.KEY.a:
-                    //case cc.KEY.left:
+                    case cc.KEY.left:
                     self.accLeft = false;
                         break;
                     case cc.KEY.d:
-                    //case cc.KEY.right:
+                    case cc.KEY.right:
                     self.accRight = false;
                         break;
                 }
@@ -99,13 +100,14 @@ cc.Class({
     },
 
     startMoveAt: function (pos) {
+        this.setInputControl()
         this.xSpeed = 0;
         this.node.setPosition(pos);
         this.node.runAction(this.jumpAction);
     },
 
     stopMove: function () {
-        cc.eventManager.removeListeners(cc.EventListener.KEYBOARD);
+        cc.eventManager.removeListeners(this.node);
         this.node.stopAllActions();
     },
     
